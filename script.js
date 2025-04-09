@@ -213,7 +213,7 @@ function addSuggestionChips() {
 
 // Initialize with welcome message and suggestions
 function initializeChat() {
-    const welcomeMessage = "## 👋 Welcome to Gemini Airport Assistant!\n\nI can help you navigate airports worldwide. Some things I can assist with:\n\n- Terminal layouts and connections\n- Transportation options\n- Dining and shopping recommendations\n- Lounge information\n- Security tips\n\nWhich airport are you traveling through?";
+    const welcomeMessage = "## 👋 Welcome to Skybot Airport Assistant!\n\nI can help you navigate airports worldwide. Some things I can assist with:\n\n- Terminal layouts and connections\n- Transportation options\n- Dining and shopping recommendations\n- Lounge information\n- Security tips\n\nWhich airport are you traveling through?";
     addMessage(welcomeMessage, false);
     addSuggestionChips();
 }
