@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Airport Navigation Assistant</title>
+    <title>Auto Maintenance Advisor</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js" defer></script>
     
@@ -107,22 +107,14 @@
             border: 1px solid #3b82f6;
         }
         
-        .airport-selector {
-            position: absolute;
-            top: 4px;
-            right: 10px;
-            z-index: 20;
-        }
-        
-        /* New styles for enhanced airport selector */
-        .airport-select-wrapper {
+        .vehicle-selector {
             position: relative;
             margin-top: 10px;
             width: 100%;
             max-width: 300px;
         }
         
-        .airport-select {
+        .vehicle-select {
             width: 100%;
             padding: 10px 12px;
             font-size: 1rem;
@@ -136,18 +128,18 @@
             transition: all 0.3s ease;
         }
         
-        .airport-select:hover {
+        .vehicle-select:hover {
             background-color: rgba(37, 99, 235, 0.7);
             border-color: #93c5fd;
         }
         
-        .airport-select:focus {
+        .vehicle-select:focus {
             outline: none;
             border-color: #3b82f6;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
         }
         
-        .airport-select-icon {
+        .vehicle-select-icon {
             position: absolute;
             right: 12px;
             top: 50%;
@@ -157,23 +149,23 @@
             transition: all 0.3s ease;
         }
         
-        .airport-select-wrapper:hover .airport-select-icon {
+        .vehicle-select-wrapper:hover .vehicle-select-icon {
             color: #93c5fd;
         }
         
-        .airport-select optgroup {
+        .vehicle-select optgroup {
             background-color: #1e3a8a;
             font-weight: bold;
         }
         
-        .airport-select option {
+        .vehicle-select option {
             background-color: #1e40af;
             padding: 8px;
         }
         
-        /* Responsive styles for the airport selector */
+        /* Responsive styles for the vehicle selector */
         @media (max-width: 768px) {
-            .airport-select-wrapper {
+            .vehicle-select-wrapper {
                 max-width: 100%;
                 margin-bottom: 15px;
             }
@@ -339,6 +331,48 @@
         opacity: 0.5;
         animation: pulse 1.5s infinite;
     }
+
+    /* Add a background image */
+    body {
+        background-image: url('https://source.unsplash.com/1600x900/?car,garage');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+    }
+
+    /* Enhance the chat container */
+    .chat-container {
+        background: rgba(0, 0, 0, 0.7);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Improve input and button styling */
+    #user-input {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    #send-button, #mic-button {
+        background: linear-gradient(45deg, #3b82f6, #1e40af);
+        border: none;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    #send-button:hover, #mic-button:hover {
+        background: linear-gradient(45deg, #2563eb, #1d4ed8);
+    }
+
+    /* Add hover effects for suggestion chips */
+    .suggestion-chip:hover {
+        background-color: rgba(59, 130, 246, 0.8);
+        color: white;
+    }
+
+    /* Add a subtle glow effect to the header */
+    .header {
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+    }
     </style>
 </head>
     <body class="relative flex justify-center items-center h-screen bg-gradient-to-br from-sky-900 via-black to-blue-900 text-gray-200 overflow-hidden">
@@ -362,13 +396,13 @@
     
         
         <div class="absolute top-5 left-5 animate-[fly_8s_linear_infinite]">
-            <i class="fas fa-plane text-white text-4xl opacity-80"></i>
+            <i class="fas fa-car text-white text-4xl opacity-80"></i>
         </div>
         <div class="absolute top-20 left-10 animate-[fly_12s_linear_infinite_2s]">
-            <i class="fas fa-plane text-white text-3xl opacity-70"></i>
+            <i class="fas fa-tools text-white text-3xl opacity-70"></i>
         </div>
         <div class="absolute bottom-40 left-5 animate-[flyReverse_10s_linear_infinite]">
-            <i class="fas fa-plane text-white text-3xl opacity-70"></i>
+            <i class="fas fa-oil-can text-white text-3xl opacity-70"></i>
         </div>
     
        
@@ -383,7 +417,7 @@
         <div id="gemini-constellation" class="absolute inset-0 pointer-events-none z-0"></div>
     
         
-        <div class=" w-full max-w-3xl h-[95vh] mt-[100px] mb-[100px] mr-5 ml-5 rounded-2xl backdrop-blur-md bg-white/10 border border-blue-300 shadow-lg relative z-10 flex flex-col overflow-hidden hover:shadow-xl hover:border-blue-200 transition-all duration-300">
+        <div class="chat-container w-full max-w-3xl h-[95vh] mt-[100px] mb-[100px] mr-5 ml-5 rounded-2xl backdrop-blur-md bg-white/10 border border-blue-300 shadow-lg relative z-10 flex flex-col overflow-hidden hover:shadow-xl hover:border-blue-200 transition-all duration-300">
     
            
             <div class="absolute -inset-1 bg-blue-500/20 rounded-2xl blur-lg opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
@@ -391,42 +425,28 @@
            
             <div class="bg-gradient-to-bl from-sky-800 via-black to-blue-900 text-white p-6 text-center font-bold shadow-md backdrop-blur-sm border-b border-white">
                 <div class="flex justify-center items-center space-x-3">
-                    <div class="text-amber-300 text-3xl animate-[pulse_4s_ease-in-out_infinite]">✦</div>
+                    <div class="text-amber-300 text-3xl animate-[pulse_4s_ease-in-out_infinite]">🔧</div>
                     <div class="flex flex-col">
-                        <h1 class="text-2xl font-bold">Skybot Airport Assistant</h1>
-                        <p class="text-xs text-blue-200 mt-1">Your twin-star guide to airports worldwide</p>
+                        <h1 class="text-2xl font-bold">Auto Maintenance Advisor</h1>
+                        <p class="text-xs text-blue-200 mt-1">Your AI mechanic assistant</p>
                     </div>
-                    <div class="text-amber-300 text-3xl animate-[pulse_4s_ease-in-out_infinite_1s]">✦</div>
+                    <div class="text-amber-300 text-3xl animate-[pulse_4s_ease-in-out_infinite_1s]">🚗</div>
                 </div>
-    
-                
+
                 <div class="flex justify-center mt-4">
-                    <div class="relative">
-                        <select id="airport-selector" class="appearance-none bg-blue-800/50 text-white border border-blue-500 rounded-lg px-5 py-2 pr-10 shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 backdrop-blur-sm hover:bg-blue-700/50 transition-colors">
-                            <option value="">✈️ Select your destination airport</option>
-                            <optgroup label="🌎 International Airports">
-                                <option value="JFK">JFK - John F. Kennedy (New York)</option>
-                                <option value="LAX">LAX - Los Angeles International</option>
-                                <option value="LHR">LHR - Heathrow (London)</option>
-                                <option value="SIN">SIN - Changi (Singapore)</option>
-                                <option value="DXB">DXB - Dubai International</option>
-                                <option value="ORD">ORD - O'Hare (Chicago)</option>
-                                <option value="HND">HND - Haneda (Tokyo)</option>
+                    <div class="relative vehicle-selector">
+                        <select id="vehicle-selector" class="vehicle-select">
+                            <option value="">🚗 Select your vehicle type</option>
+                            <optgroup label="Passenger Vehicles">
+                                <option value="sedan">Sedan</option>
+                                <option value="suv">SUV</option>
+                                <option value="hatchback">Hatchback</option>
+                                <option value="crossover">Crossover</option>
                             </optgroup>
-                            <optgroup label="🇮🇳 Indian Airports">
-                                <option value="DEL">DEL - Indira Gandhi (Delhi)</option>
-                                <option value="BOM">BOM - Chhatrapati Shivaji (Mumbai)</option>
-                                <option value="BLR">BLR - Kempegowda (Bangalore)</option>
-                                <option value="MAA">MAA - Chennai International</option>
-                                <option value="CCU">CCU - Netaji Subhas (Kolkata)</option>
-                                <option value="HYD">HYD - Rajiv Gandhi (Hyderabad)</option>
-                                <option value="AMD">AMD - Sardar Vallabhbhai (Ahmedabad)</option>
-                                <option value="COK">COK - Cochin International</option>
-                                <option value="GOI">GOI - Goa International</option>
-                                <option value="GAU">GAU - Lokpriya Gopinath (Guwahati)</option>
-                                <option value="JAI">JAI - Jaipur International</option>
-                                <option value="LKO">LKO - Lucknow International</option>
-                                <option value="IXC">IXC - Chandigarh International</option>
+                            <optgroup label="Commercial Vehicles">
+                                <option value="truck">Truck</option>
+                                <option value="van">Van</option>
+                                <option value="bus">Bus</option>
                             </optgroup>
                         </select>
                         <div class="absolute right-3 top-3 text-white pointer-events-none animate-[bounce_2s_infinite]">
@@ -442,7 +462,7 @@
             </div>
     
             <div class="flex p-5 bg-blue-800/30 border-t border-blue-500 backdrop-blur-md">
-                <input type="text" id="user-input" placeholder="Ask about airport navigation, facilities, or tips..."
+                <input type="text" id="user-input" placeholder="Ask about vehicle maintenance or repairs..."
                     class="flex-grow p-3 border border-blue-400 rounded-lg bg-blue-600/30 text-blue-100 backdrop-blur-md placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-blue-300 transition-colors" />
                 <button id="mic-button"
                     class="ml-3 px-5 py-2 bg-blue-600/60 hover:bg-blue-500 text-white rounded-lg transition disabled:bg-blue-900 disabled:cursor-not-allowed backdrop-blur-sm hover:scale-105 transform transition-transform relative">
@@ -520,31 +540,6 @@
             }
         });
         
-        // Airport selector functionality - updated
-        document.getElementById('airport-selector').addEventListener('change', function() {
-            if (this.value) {
-                const airportCode = this.value;
-                const airportName = this.options[this.selectedIndex].text.split(' - ')[1] || airportCode;
-                
-                document.getElementById('user-input').value = `Tell me about ${airportCode} airport (${airportName})`;
-                document.getElementById('send-button').click();
-                
-                // Add subtle airplane animation after selection
-                const flyingPlane = document.createElement('div');
-                flyingPlane.innerHTML = '<i class="fas fa-plane text-white text-4xl"></i>';
-                flyingPlane.className = 'absolute';
-                flyingPlane.style.top = '50%';
-                flyingPlane.style.left = '-5%';
-                flyingPlane.style.animation = 'fly 4s linear forwards';
-                document.body.appendChild(flyingPlane);
-                
-                // Remove the plane after animation completes
-                setTimeout(() => flyingPlane.remove(), 4000);
-                
-                // Reset selector with slight delay for better UX
-                setTimeout(() => this.selectedIndex = 0, 500);
-            }
-        });
     </script>
     <script src="script.js"></script>
 </body>

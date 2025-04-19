@@ -7,42 +7,27 @@ const chatMessages = document.getElementById('chat-messages');
 const userInput = document.getElementById('user-input');
 const sendButton = document.getElementById('send-button');
 
-// Add current airport context tracking
-let currentAirport = null;
+// Update tracking variable for current vehicle
+let currentVehicle = null;
 
-// List of major airports for context detection
-const airportKeywords = {
-    'JFK': ['jfk', 'kennedy', 'new york'],
-    'LAX': ['lax', 'los angeles'],
-    'LHR': ['heathrow', 'lhr', 'london'],
-    'SIN': ['changi', 'sin', 'singapore'],
-    'DXB': ['dubai', 'dxb'],
-    'ORD': ["o'hare", 'ord', 'chicago'],
-    'HND': ['haneda', 'hnd', 'tokyo'],
-    // Indian Airports
-    'DEL': ['del', 'indira gandhi', 'delhi', 'new delhi', 'igi'],
-    'BOM': ['bom', 'csia', 'mumbai', 'chhatrapati shivaji', 'bombay'],
-    'BLR': ['blr', 'bengaluru', 'bangalore', 'kempegowda'],
-    'MAA': ['maa', 'chennai', 'madras'],
-    'CCU': ['ccu', 'kolkata', 'netaji subhas', 'calcutta'],
-    'HYD': ['hyd', 'hyderabad', 'rajiv gandhi'],
-    'AMD': ['amd', 'ahmedabad', 'sardar vallabhbhai patel'],
-    'COK': ['cok', 'kochi', 'cochin'],
-    'GOI': ['goi', 'goa', 'dabolim'],
-    'GAU': ['gau', 'guwahati', 'lokpriya gopinath bordoloi'],
-    'JAI': ['jai', 'jaipur', 'sanganeer'],
-    'LKO': ['lko', 'lucknow', 'chaudhary charan singh'],
-    'IXC': ['ixc', 'chandigarh'],
-    // Add more airports as needed
+// Update keywords for vehicle detection
+const vehicleKeywords = {
+    'sedan': ['sedan', 'car', 'saloon'],
+    'suv': ['suv', 'sports utility vehicle', '4x4'],
+    'hatchback': ['hatchback', 'hatch'],
+    'crossover': ['crossover', 'cuv'],
+    'truck': ['truck', 'pickup', 'lorry'],
+    'van': ['van', 'minivan'],
+    'bus': ['bus', 'coach']
 };
 
-// Function to detect if a message mentions a specific airport
-function detectAirport(message) {
+// Function to detect vehicle type from message
+function detectVehicle(message) {
     const lowercaseMsg = message.toLowerCase();
     
-    for (const [airport, keywords] of Object.entries(airportKeywords)) {
+    for (const [vehicle, keywords] of Object.entries(vehicleKeywords)) {
         if (keywords.some(keyword => lowercaseMsg.includes(keyword))) {
-            return airport;
+            return vehicle;
         }
     }
     return null;
@@ -50,56 +35,40 @@ function detectAirport(message) {
 
 async function generateResponse(prompt) {
     try {
-        // Check if user is asking about a new airport
-        const detectedAirport = detectAirport(prompt);
-        if (detectedAirport) {
-            currentAirport = detectedAirport;
+        const detectedVehicle = detectVehicle(prompt);
+        if (detectedVehicle) {
+            currentVehicle = detectedVehicle;
         }
         
-        // Airport assistant context to guide the AI responses
-        const airportContext = `You are an AI-based personal airport guide called "Gemini Airport Assistant". 
-        Your purpose is to provide helpful navigation tips, information about facilities, 
-        and guidance for specific airports worldwide. When asked about an airport, provide 
-        detailed information about terminal layouts, transportation options, dining options, 
-        lounges, security checkpoints, and any special features of that airport.
-        
-        ${currentAirport ? `The user is currently asking about ${currentAirport} airport. 
-        Answer all questions assuming they are about ${currentAirport} unless the user clearly mentions another airport.` : 
-        'If the user doesn\'t specify an airport, ask which airport they need help with.'}
-        
-        Format your responses using Markdown with headings, bullet points, and emphasis where appropriate.
-        Keep responses concise and practical for travelers.`;
-        
-        const fullPrompt = `${airportContext}\n\nUser query: ${prompt}`;
-        
+        const context = `You are AutoCare Assistant. Provide concise maintenance advice for ${currentVehicle || 'vehicles'}. 
+Focus on:
+${currentVehicle ? `- Specific ${currentVehicle} maintenance needs
+- Common ${currentVehicle} issues
+- ${currentVehicle}-specific service intervals` : 
+'- General vehicle maintenance tips'}
+
+Keep responses under 100 words and include specific actionable steps.
+Current vehicle type: ${currentVehicle || 'not specified'}`;
+
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`, {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json'
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-              'contents': [
-                {
-                  'parts': [
-                    {
-                      'text': fullPrompt
-                    }
-                  ]
-                }
-              ]
+                'contents': [{
+                    'parts': [{
+                        'text': `${context}\n\nUser query about ${currentVehicle || 'vehicle'}: ${prompt}`
+                    }]
+                }]
             })
-          });
+        });
+
         const data = await response.json();
-
-        if (!data || !data.candidates || !data.candidates[0]?.content?.parts[0]?.text) {
-            throw new Error("Invalid response from Gemini API.");
-        }
-
-        return data.candidates[0].content.parts[0].text;
+        return data.candidates[0]?.content?.parts[0]?.text || `I'll help you maintain your ${currentVehicle || 'vehicle'}. What specific aspect would you like to know about?`;
     } catch (error) {
         console.error("API Error:", error);
-        showErrorMessage("Unable to retrieve airport information. Please try again later.");
-        return null;
+        return "I'm having trouble right now. Please try again later.";
     }
 }
 
@@ -181,17 +150,24 @@ function showErrorMessage(errorText) {
     setTimeout(() => errorElement.remove(), 5000); // Auto-remove error after 5 seconds
 }
 
-// Suggest common airport queries with improved styling
-function addSuggestionChips() {
+// Update initialization with welcome message for auto maintenance
+function initializeChat() {
+    const welcomeMessage = "## 🔧 Welcome to AutoCare Assistant!\n\nI'm your AI mechanic helper. I can assist with:\n\n- Vehicle maintenance schedules\n- Troubleshooting issues\n- Service reminders\n- Performance tips\n- Repair guidance\n\nSelect your vehicle type or ask me anything about vehicle maintenance!";
+    addMessage(welcomeMessage, false);
+    addMaintenanceSuggestions();
+}
+
+// Add maintenance-specific suggestion chips
+function addMaintenanceSuggestions() {
     const suggestions = [
-        "Help with JFK Airport navigation",
-        "Best food options at LAX",
-        "Heathrow Airport terminal connections",
-        "Singapore Changi Airport attractions",
-        "Dubai Airport duty-free shopping",
-        "Delhi Airport terminal guide",
-        "Mumbai Airport transportation options",
-        "Bangalore Airport lounges"
+        "Regular maintenance schedule",
+        "Engine troubleshooting",
+        "Transmission care",
+        "Brake system check",
+        "Fluid levels guide",
+        "Battery maintenance",
+        "Tire care tips",
+        "Filter replacement"
     ];
     
     const suggestionContainer = document.createElement('div');
@@ -211,27 +187,25 @@ function addSuggestionChips() {
     chatMessages.appendChild(suggestionContainer);
 }
 
-// Initialize with welcome message and suggestions
-function initializeChat() {
-    const welcomeMessage = "## 👋 Welcome to Skybot Airport Assistant!\n\nI can help you navigate airports worldwide. Some things I can assist with:\n\n- Terminal layouts and connections\n- Transportation options\n- Dining and shopping recommendations\n- Lounge information\n- Security tips\n\nWhich airport are you traveling through?";
-    addMessage(welcomeMessage, false);
-    addSuggestionChips();
-}
-
 // Add initialization when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    const airportSelector = document.getElementById('airport-selector');
-    if (airportSelector) {
-        airportSelector.addEventListener('change', function() {
+    const vehicleSelector = document.getElementById('vehicle-selector');
+
+    if (vehicleSelector) {
+        vehicleSelector.addEventListener('change', function() {
             if (this.value) {
-                currentAirport = this.value;
-                document.getElementById('user-input').value = `Tell me about ${this.value} airport`;
-                document.getElementById('send-button').click();
-                this.selectedIndex = 0; // Reset selector
+                currentVehicle = this.value;
+                const vehicleName = this.options[this.selectedIndex].text;
+
+                // Agent replies with a question about the selected vehicle
+                const botMessage = `What do you want to know about your selected vehicle (${vehicleName})?`;
+                addMessage(botMessage, false); // Display the bot's response in the chat
+
+                // Do not reset the dropdown to allow the selected vehicle to remain visible
             }
         });
     }
-    
+
     // Initialize chat
     initializeChat();
 });
@@ -247,34 +221,39 @@ if ('webkitSpeechRecognition' in window) {
     recognition.lang = 'en-US';
 
     micButton.addEventListener('click', () => {
-        if (recognition) {
-            recognition.start();
-            micButton.disabled = true;
-            micButton.classList.add('recording');
-            userInput.placeholder = "Listening..."; // Update placeholder to indicate listening
+        if (!currentVehicle) {
+            showErrorMessage("Please select a vehicle type before using the microphone.");
+            return;
         }
+
+        recognition.start();
+        micButton.disabled = true;
+        micButton.classList.add('recording');
+        userInput.placeholder = `Listening for queries about your ${currentVehicle}...`; // Update placeholder to indicate listening
     });
 
-    recognition.onresult = (event) => {
+    recognition.onresult = async (event) => {
         const transcript = event.results[0][0].transcript;
         userInput.value = transcript;
         micButton.disabled = false;
         micButton.classList.remove('recording');
-        userInput.placeholder = "Ask about airport navigation, facilities, or tips..."; // Reset placeholder
-        handleUserInput(); // Automatically send the transcribed text to GPT
+        userInput.placeholder = "Ask about vehicle maintenance or repairs..."; // Reset placeholder
+
+        // Automatically send the transcribed text to the bot with the selected vehicle context
+        await handleUserInput();
     };
 
     recognition.onerror = () => {
         showErrorMessage("Voice recognition failed. Please try again.");
         micButton.disabled = false;
         micButton.classList.remove('recording');
-        userInput.placeholder = "Ask about airport navigation, facilities, or tips..."; // Reset placeholder
+        userInput.placeholder = "Ask about vehicle maintenance or repairs..."; // Reset placeholder
     };
 
     recognition.onend = () => {
         micButton.disabled = false;
         micButton.classList.remove('recording');
-        userInput.placeholder = "Ask about airport navigation, facilities, or tips..."; // Reset placeholder
+        userInput.placeholder = "Ask about vehicle maintenance or repairs..."; // Reset placeholder
     };
 } else {
     micButton.disabled = true;
